@@ -1,0 +1,12 @@
+[package]
+name = "xor"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+Rust_Simple_DNN = { path = "../../"}
+
+
+[[bin]]
+name = "xor"
+path = "main.rs"
