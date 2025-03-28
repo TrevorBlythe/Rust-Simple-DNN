@@ -1,86 +1,89 @@
-use crate::rdnn::layers::GenericLayer::GenericLayer;
+use super::GenericLayerTrait::GenericLayer;
 
-//Sometimes Relu can make networks explode
+/*
+Represents a layer in a neural network that performs the Relu activation function
+*/
 pub struct Relu {
-    pub out_data: Vec<f32>, //the input data for the next layer
-    pub costs: Vec<f32>, //costs/error for each "neuron/node/input data" cost[0] is for last layers out_data[0]
-    pub in_size: usize,
-    pub out_size: usize,
+    //empty params in this case, only exists to have something to return in get_param
+    pub params: Vec<f32>, 
+    pub grads: Vec<f32>, //same here ^^^
+    pub out_data: Vec<f32>,
+    pub input_grads: Vec<f32>,
+    size: usize,
 }
+
 
 pub fn new(size: usize) -> Box<Relu> {
-    return Box::new(Relu {
-        costs: vec![0.0; size],
+    Box::new(Relu {
+        params: vec![0.0; 0], //has no params
+        grads: vec![0.0; 0], //has no params, and therefore no grads
         out_data: vec![0.0; size],
-        in_size: size,
-        out_size: size,
-    }); // return a boxed Sig layer
+        input_grads: vec![0.0; size],
+        size,
+    })
 }
 
+
 impl GenericLayer for Relu {
-    fn is_trainable(&self) -> bool {
-        return false;
+    fn forward_data(&mut self, data: &Vec<f32>) {
+        for i in 0..self.size {
+            self.out_data[i] = if data[i] > 0.0 { data[i] } else { 0.0 };
+        }
     }
 
-    fn get_name(&self) -> String {
-        return String::from("Relu");
+    fn backward_target(&mut self, data_in: &Vec<f32>, expected: &Vec<f32>) {
+        for i in 0..self.size {
+            let derivative = if data_in[i] >= 0.0 { 1.0 } else { 0.0 };
+            self.input_grads[i] = (expected[i] - self.out_data[i]) * derivative;
+        }
     }
 
-    fn get_in_size(&self) -> usize {
-        self.in_size
-    }
-
-    fn get_out_size(&self) -> usize {
-        self.out_size
-    }
-    fn get_params_and_grads(&mut self) -> (&mut Vec<f32>, &mut Vec<f32>) {
-        panic!("shoudnt ever call this on a relu layer buddy");
-    }
-
-    fn get_weights_mut(&mut self) -> &mut Vec<f32> {
-        panic!("nope");
-    }
-
-    fn get_grads(&self) -> &Vec<f32> {
-        panic!("nope");
-    }
-
-    fn get_costs(&self) -> &Vec<f32> {
-        &self.costs
+    fn backward_grads(&mut self, data_in: &Vec<f32>, grads: &Vec<f32>) {
+        for i in 0..self.size {
+            let derivative = if data_in[i] >= 0.0 { 1.0 } else { 0.0 };
+            self.input_grads[i] = grads[i] * derivative;
+        }
     }
 
     fn get_out_data(&self) -> &Vec<f32> {
         &self.out_data
     }
 
-    fn get_weights(&self) -> &Vec<f32> {
-        panic!("nope");
+    fn get_input_grads(&self) -> &Vec<f32> {
+        &self.input_grads
     }
 
-    fn backward_data(&mut self, _data_in: &Vec<f32>, expected: &Vec<f32>) {
-        for j in 0..self.in_size {
-            if self.out_data[j] > 0.0{
-                let z = expected[j] - self.out_data[j];
-                self.costs[j] = z;
-            }
-        }
+    fn get_name(&self) -> &str {
+        "ReLU"
     }
 
-    fn backward_costs(&mut self, _data_in: &Vec<f32>, costs: &Vec<f32>) {
-        for j in 0..self.in_size {
-            if self.out_data[j] > 0.0{
-                self.costs[j] = costs[j];
-            }
-        }
+    fn is_trainable(&self) -> bool {
+        false
     }
 
-    fn forward_data(&mut self, data: &Vec<f32>) {
-        for i in 0..self.out_data.len() {
-            if data[i] > 0.0 {
-                self.out_data[i] = data[i];
-            }else{
-                self.out_data[i] = 0.0;
-            }
-        }
+    fn get_in_size(&self) -> usize {
+        self.size
     }
+
+    fn get_out_size(&self) -> usize {
+        self.size
+    }
+
+
+    fn get_params_and_grads(&mut self) -> Vec<(&mut Vec<f32>, &mut Vec<f32>)> {
+        vec![(&mut self.params,&mut self.grads)]
+    }
+
+    fn get_params_mut(&mut self) -> Vec<&mut Vec<f32>> {
+        vec![&mut self.params] //in this layer, they are empty
+    }
+
+    fn get_grads(&self) -> Vec<&Vec<f32>> {
+        vec![&self.grads] //in this layer, they are empty
+    }
+
+    fn get_params(&self) -> Vec<&Vec<f32>> {
+        vec![&self.params] //in this layer, they are empty
+    }
+
 }

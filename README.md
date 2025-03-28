@@ -46,7 +46,16 @@ Relu::new(inputSize); //if activation > 0
 Sig::new(inputSize); //sigmoid
 ```
 
-Put these after FC,Conv,Deconv, or any dotproduct type layer to make the network nonlinear, or else the network will not work 99% of use cases.
+<br>
+
+- Convolutions
+
+```rust
+Conv2d::new(input_dims: [usize; 3],
+        filter_dims: [usize; 2],
+        output_channels: usize, //also represents the amount of filters
+        stride: usize,);
+```
 
 # starting tutorial
 
@@ -62,13 +71,13 @@ Use this code to make it:
 let mut net = Net::new(
         vec![
             FC::new(3, 4), //Linear/Dense input size 3, output 4
-            Sig::new(4), //sigmoid, input 4 output 4
+            Sigmoid::new(4), //sigmoid, input 4 output 4
 
             FC::new(4, 4),
-            Sig::new(4), //sigmoid
+            Sigmoid::new(4), //sigmoid
 
             FC::new(4, 1),// input 4 output 1
-            Sig::new(1), //sigmoid
+            Sigmoid::new(1), //sigmoid
         ],
         1, //batch size
         0.1, //learning rate

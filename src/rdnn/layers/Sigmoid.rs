@@ -1,8 +1,9 @@
 use super::GenericLayerTrait::GenericLayer;
+
 /*
-Represents a layer in a neural network that performs the Tanh activation function
+Represents a layer in a neural network that performs the Sigmoid activation function
 */
-pub struct Tanh {
+pub struct Sigmoid {
     //empty params in this case, only exists to have something to return in get_param
     pub params: Vec<f32>, 
     pub grads: Vec<f32>, //same here ^^^
@@ -11,8 +12,8 @@ pub struct Tanh {
     size: usize,
 }
 
-pub fn new(size: usize) -> Box<Tanh> {
-    Box::new(Tanh {
+pub fn new(size: usize) -> Box<Sigmoid> {
+    Box::new(Sigmoid {
         params: vec![0.0; 0], //has no params
         grads: vec![0.0; 0], //has no params, and therefore no grads
         out_data: vec![0.0; size],
@@ -21,24 +22,25 @@ pub fn new(size: usize) -> Box<Tanh> {
     })
 }
 
-impl GenericLayer for Tanh {
+
+impl GenericLayer for Sigmoid {
     fn forward_data(&mut self, data: &Vec<f32>) {
         for i in 0..self.size {
-            self.out_data[i] = data[i].tanh();
+            self.out_data[i] = 1.0 / (1.0 + (-data[i]).exp());
         }
     }
 
     fn backward_target(&mut self, _data_in: &Vec<f32>, expected: &Vec<f32>) {
         for i in 0..self.size {
-            let derivative = 1.0 - self.out_data[i].powi(2); //derivative of tanh(x) is 1-tanh(x)^2
-            self.input_grads[i] = (expected[i] - self.out_data[i]) * derivative;
+            let sigmoid_derivative = self.out_data[i] * (1.0 - self.out_data[i]);
+            self.input_grads[i] = (expected[i] - self.out_data[i]) * sigmoid_derivative;
         }
     }
 
     fn backward_grads(&mut self, _data_in: &Vec<f32>, grads: &Vec<f32>) {
         for i in 0..self.size {
-            let derivative = 1.0 - self.out_data[i].powi(2);
-            self.input_grads[i] = grads[i] * derivative;
+            let sigmoid_derivative = self.out_data[i] * (1.0 - self.out_data[i]);
+            self.input_grads[i] = grads[i] * sigmoid_derivative;
         }
     }
 
@@ -51,7 +53,7 @@ impl GenericLayer for Tanh {
     }
 
     fn get_name(&self) -> &str {
-        "Tanh"
+        "Sigmoid"
     }
 
     fn is_trainable(&self) -> bool {
@@ -65,7 +67,6 @@ impl GenericLayer for Tanh {
     fn get_out_size(&self) -> usize {
         self.size
     }
-    
     fn get_params_and_grads(&mut self) -> Vec<(&mut Vec<f32>, &mut Vec<f32>)> {
         vec![(&mut self.params,&mut self.grads)]
     }
