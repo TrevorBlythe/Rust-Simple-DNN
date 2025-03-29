@@ -22,7 +22,6 @@ pub struct Conv2D {
     output_area: usize,
     input_area: usize,
     filter_area: usize,
-    input_area_times_channels: usize,
     filter_area_times_channels: usize,
 }
 
@@ -126,7 +125,6 @@ pub fn new(
             output_area: output_height * output_width,
             input_area: input_height * input_width,
             filter_area: filter_width * filter_height,
-            input_area_times_channels: input_height * input_width * input_channels,
             filter_area_times_channels: filter_width * filter_height * input_channels,
         });
 

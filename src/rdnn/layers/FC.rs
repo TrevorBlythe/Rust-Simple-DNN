@@ -37,56 +37,41 @@ impl GenericLayer for FC {
     }
 
     fn backward_target(&mut self, data_in: &Vec<f32>, expected: &Vec<f32>) {
-        for i in &mut self.input_grads {
-            //reset the input grads
-            *i = 0.0;
-        }
-        for i in 0..=self.out_size - 1 {
-            let err = expected[i] - self.out_data[i];
-            for j in 0..=self.in_size - 1 {
-                //activation times error = change to the weight to reduce error
-                // weight times error = change to the activation to reduce error (cost)
-                self.weightsGrads[i + j * self.out_size] += data_in[j] * err * 2.;
-                self.input_grads[j] += self.weights[i + j * self.out_size] * err * 2.;
-            }
-            self.biasGrads[i] += err;
-            //bias grad is real simple :)
-        }
+        self.input_grads.iter_mut().for_each(|i| *i = 0.0);
 
-        for j in 0..=self.in_size - 1 {
-            self.input_grads[j] /= self.out_size as f32; //finish averaging out the costs
-        }
+            for (i, &expected_val) in expected.iter().enumerate() {
+                let err = expected_val - self.out_data[i];
+                for (j, &data_val) in data_in.iter().enumerate() {
+                    self.weightsGrads[i + j * self.out_size] += data_val * err * 2.0;
+                    self.input_grads[j] += self.weights[i + j * self.out_size] * err * 2.0;
+                }
+                self.biasGrads[i] += err;
+            }
+
+            self.input_grads.iter_mut().for_each(|input_grad| *input_grad /= self.out_size as f32);
     }
 
     fn backward_grads(&mut self, data_in: &Vec<f32>, grads: &Vec<f32>) {
-        for i in &mut self.input_grads {
-            //reset the input grads
-            *i = 0.0;
-        }
-        for i in 0..=self.out_size - 1 {
-            for j in 0..=self.in_size - 1 {
-                //activation times error = change to the weight to reduce error
-                // weight times error = change to the activation to reduce error (cost)
-                self.weightsGrads[i + j * self.out_size] += data_in[j] * grads[i] * 2.;
-                self.input_grads[j] += self.weights[i + j * self.out_size] * grads[i] * 2.;
+        self.input_grads.iter_mut().for_each(|i| *i = 0.0);
+
+        for (i, &grad) in grads.iter().enumerate() {
+            for (j, &data_val) in data_in.iter().enumerate() {
+                self.weightsGrads[i + j * self.out_size] += data_val * grad * 2.0;
+                self.input_grads[j] += self.weights[i + j * self.out_size] * grad * 2.0;
             }
-            self.biasGrads[i] += grads[i];
-            //bias grad is real simple :)
+            self.biasGrads[i] += grad;
         }
 
-        for j in 0..=self.in_size - 1 {
-            self.input_grads[j] /= self.out_size as f32; //finish averaging out the costs
-        }
+        self.input_grads.iter_mut().for_each(|input_grad| *input_grad /= self.out_size as f32);
     }
 
     fn forward_data(&mut self, data: &Vec<f32>) {
-        for i in 0..=self.out_size - 1 {
-            self.out_data[i] = 0.0;
-            for j in 0..=self.in_size - 1 {
-                self.out_data[i] += data[j] * self.weights[i + j * self.out_size];
-                //this is the dirty deed of AI
+        for (i, out_val) in self.out_data.iter_mut().enumerate() {
+            *out_val = self.bias[i]; // Initialize with bias
+
+            for (j, &data_val) in data.iter().enumerate() {
+                *out_val += data_val * self.weights[i + j * self.out_size];
             }
-            self.out_data[i] += self.bias[i]; // add bias :)
         }
     }
 

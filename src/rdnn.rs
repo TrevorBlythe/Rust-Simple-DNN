@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+// #![allow(dead_code)]
 pub mod layers;
 
 pub struct Net {
@@ -95,4 +95,88 @@ impl Net {
             }
         }
     }
+}
+
+
+// SERDE SECTION BELOW (code for saving networks to files and loading networks) -------------
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+#[cfg(feature = "serde")]
+use serde_json;
+#[cfg(feature = "serde")]
+use std::fs::File;
+#[cfg(feature = "serde")]
+use std::io::Read;
+#[cfg(feature = "serde")]
+use std::io::Write;
+
+//This struct exists to hold the parameters of a network,
+// and then get serialized/saved to a file with serde.
+#[cfg(feature = "serde")]
+#[derive(Serialize, Deserialize)]
+struct SavedWeights {
+    paramsForEachLayer: Vec<Vec<f32>>, // A Vector of each Layers Parameters
+}
+
+impl Net {
+    //example: net.save_weights("network_weights.json");
+    #[allow(unused_variables)] //it says path is unused cuz the feature gating
+    pub fn save_weights(&self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        #[cfg(feature = "serde")]
+        {
+            let mut tempWeightsContainer: Vec<Vec<f32>> = Vec::new();
+            for layer in &self.layers {
+                for param in layer.get_params() {
+                    tempWeightsContainer.push(param.clone());
+                }
+            }
+
+            let data = serde_json::to_string(&SavedWeights { paramsForEachLayer: tempWeightsContainer }).unwrap();
+            let mut file = File::create(path)?;
+            file.write_all(data.as_bytes())?;
+
+            Ok(()) 
+        }
+        #[cfg(not(feature = "serde"))]
+        {
+            eprintln!("rdnn error: serde feature not enabled, cannot save weights. HINT: use the serde feature. + Rust_Simple_DNN = {{ .. features= ['serde']}}");
+            Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "rdnn error: serde feature not enabled, cannot save weights. HINT: use the serde feature. + Rust_Simple_DNN = { .. features= ['serde']}",
+            )))
+        }
+    }
+
+    #[allow(unused_variables)] //it says path is unused cuz the feature gating
+    pub fn load_weights(&mut self, path: &str) -> Result<(), Box<dyn std::error::Error>>  {
+
+        #[cfg(feature = "serde")]
+        {
+            let mut file = File::open(path)?;
+            let mut data = String::new();
+            file.read_to_string(&mut data)?;
+            
+            let saved: SavedWeights = serde_json::from_str(&data)?;
+            let mut counter:usize = 0;
+            for layer in self.layers.iter_mut() {
+                let mut params_mut = layer.get_params_mut();
+                
+                // Iterate over the saved parameters and assign them to each parameter in the layer
+                for params in params_mut.iter_mut() {
+                    params.copy_from_slice(&saved.paramsForEachLayer[counter]);
+                    counter += 1;
+                }
+            }
+            Ok(())
+        }
+        #[cfg(not(feature = "serde"))]
+        {
+            eprintln!("rdnn error: serde feature not enabled, cannot save weights. HINT: use the serde feature. + Rust_Simple_DNN = {{ .. features= ['serde']}}");
+            Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "serde feature not enabled, cannot load weights HINT: use the serde feature. + Rust_Simple_DNN = { .. features= ['serde']}",
+            )))
+        }
+    }
+
 }

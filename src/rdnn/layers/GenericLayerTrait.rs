@@ -5,7 +5,7 @@ Represents a layer in a neural network
 */
 pub trait GenericLayer {
 
-//The CORE operations -------
+//The CORE operations ------- (todo they should take slices (more flexible))
     fn forward_data(&mut self, data: &Vec<f32>); //Input data into the model, returns output
 
     //"data_in" represents the previous layers output. This gets passed in to avoid

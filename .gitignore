@@ -3,3 +3,4 @@ Cargo.lock
 .vscode
 PersonalReadMe.md
 .gitignore
+examples/saveLoadModel/network_weights.json

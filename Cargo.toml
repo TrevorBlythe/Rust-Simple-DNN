@@ -22,4 +22,11 @@ bench = false
 
 [dependencies]
 rand = "0.9.0"
+serde = { version = "1.0.219", features = ["derive"], optional = true }
+serde_json = { version = "1.0.140", optional = true }
+serde_traitobject = {version = "0.1.1", optional = true }
+serde_derive = {version = "1.0.219", optional = true }
 
+[features]
+# Use the serde feature if you want to save and load models
+serde = ["dep:serde", "dep:serde_json", "dep:serde_derive"] # Add other serde dependencies as needed.

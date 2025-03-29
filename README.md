@@ -1,11 +1,8 @@
 
+
 # Rust DNN
 
 Create Modular Lightweight Deep Neural Networks in Rust easy
-
-# Progress
-
-Very basic layers have been implemented. Ill make more if people star the project
 
 # Installation
 
@@ -43,7 +40,8 @@ These layers have exponintial more computation when scaled up though.
 ```rust
 Tanh::new(inputSize); //hyperbolic tangent
 Relu::new(inputSize); //if activation > 0
-Sig::new(inputSize); //sigmoid
+LeakyRelu::new(inputSize, alpha); //Relu with leak
+Sigmoid::new(inputSize); //sigmoid
 ```
 
 <br>
@@ -121,4 +119,29 @@ let mut iteration = 0; //just a counter
     }
 
 //at this point its well trained
+```
+
+# Saving and Loading
+
+An example for saving in loading is in examples/saveLoadModel.
+You have to be using the serde feature on this crate
+```toml
+[dependencies]
+Rust_Simple_DNN = { ... features= ["serde"]}
+#use this feature to save and load to files
+```
+
+In code, the functions for saving and loading are:
+```rust
+//Some example model you want to save..
+let mut net = Net::new(
+    ... //dont forget the architecture it doesn't get saved
+);
+net.save_weights("path.json"); //Stores the parameters
+
+
+let mut loaded_net = Net::new( 
+    ... //same architecture as "net" or it wont load right
+);
+loaded_net.load_weights("path.json"); //loaded net will now produce the same output as net
 ```
